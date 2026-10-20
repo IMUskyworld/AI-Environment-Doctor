@@ -30,6 +30,9 @@ jobs:
           python-version: ${{ matrix.python }}
           enable-cache: true
 
+      - name: Lockfile is up to date
+        run: uv lock --check
+
       - name: Install dependencies
         run: uv sync --frozen --extra dev --python ${{ matrix.python }}
 

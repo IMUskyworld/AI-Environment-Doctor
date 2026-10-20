@@ -34,6 +34,19 @@ Invoke-Step "ruff format --check" @("-m", "ruff", "format", "--check", "src", "t
 Invoke-Step "pyright (src)" @("-m", "pyright")
 Invoke-Step "schemas are current" @("scripts/export_schemas.py", "--check")
 
+$uv = Get-Command uv -ErrorAction SilentlyContinue
+if ($uv) {
+    Write-Host "`n=== uv.lock is up to date" -ForegroundColor Cyan
+    & uv lock --check
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "FAILED: uv.lock is up to date (run: uv lock)" -ForegroundColor Red
+        exit $LASTEXITCODE
+    }
+} else {
+    Write-Host "`n=== uv.lock is up to date" -ForegroundColor Yellow
+    Write-Host "uv not found: skipping the lockfile check" -ForegroundColor Yellow
+}
+
 if ($WithGpu) {
     Invoke-Step "pytest (all incl. gpu)" @("-m", "pytest", "-q")
 } else {
