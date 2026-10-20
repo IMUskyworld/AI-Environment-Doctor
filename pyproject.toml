@@ -26,7 +26,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -56,6 +56,13 @@ dev = [
 
 [project.scripts]
 envdoctor = "envdoctor.cli.main:main"
+
+[project.urls]
+Homepage = "https://github.com/IMUskyworld/envdoctor"
+Repository = "https://github.com/IMUskyworld/envdoctor"
+Issues = "https://github.com/IMUskyworld/envdoctor/issues"
+Changelog = "https://github.com/IMUskyworld/envdoctor/blob/main/CHANGELOG.md"
+Documentation = "https://github.com/IMUskyworld/envdoctor/blob/main/DEVELOPMENT.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/envdoctor"]

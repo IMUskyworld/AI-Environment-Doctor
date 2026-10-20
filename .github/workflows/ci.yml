@@ -15,12 +15,11 @@ concurrency:
 
 jobs:
   quality:
-    name: ${{ matrix.os }} / py${{ matrix.python }}
-    runs-on: ${{ matrix.os }}
+    name: windows / py${{ matrix.python }}
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
         python: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
@@ -59,7 +58,7 @@ jobs:
 
   package:
     name: build & install (wheel smoke test)
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -73,23 +72,23 @@ jobs:
 
       - name: Install the built wheel into a clean environment
         run: |
-          uv venv /tmp/envdoctor-wheel --python 3.11
-          uv pip install --python /tmp/envdoctor-wheel/bin/python dist/*.whl
+          uv venv .venv-wheel --python 3.11
+          uv pip install --python .venv-wheel/Scripts/python.exe dist/*.whl
 
       - name: Console script works
-        run: /tmp/envdoctor-wheel/bin/envdoctor version
+        run: .venv-wheel/Scripts/envdoctor.exe version
 
       - name: Module entry point works
-        run: /tmp/envdoctor-wheel/bin/python -m envdoctor version
+        run: .venv-wheel/Scripts/python.exe -m envdoctor version
 
       - name: Web console serves its page and enforces the token
         run: |
-          /tmp/envdoctor-wheel/bin/envdoctor web --port 8799 --no-open --workdir /tmp/envdoctor-web > /tmp/web.log 2>&1 &
+          .venv-wheel/Scripts/envdoctor.exe web --port 8799 --no-open --workdir .envdoctor-web > web.log 2>&1 &
           for i in $(seq 1 30); do
-            if grep -q "token=" /tmp/web.log; then break; fi
+            if grep -q "token=" web.log; then break; fi
             sleep 0.5
           done
-          token=$(grep -o "token=[A-Za-z0-9_-]*" /tmp/web.log | head -n 1 | cut -d= -f2)
+          token=$(grep -o "token=[A-Za-z0-9_-]*" web.log | head -n 1 | cut -d= -f2)
           test -n "$token"
           # 无令牌 → 403；有令牌 → 200 且页面内嵌令牌
           status=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8799/)
@@ -102,8 +101,8 @@ jobs:
 
       - name: Self-contained HTML report
         run: |
-          /tmp/envdoctor-wheel/bin/envdoctor doctor . --no-verify --workdir /tmp/envdoctor-work >/dev/null
-          report=$(ls -1 /tmp/envdoctor-work/runs/*/report.html | head -n 1)
+          .venv-wheel/Scripts/envdoctor.exe doctor . --no-verify --workdir .envdoctor-work >$null
+          report=$(ls -1 .envdoctor-work/runs/*/report.html | head -n 1)
           test -f "$report"
           ! grep -E '(src|href)="https?://' "$report"
 

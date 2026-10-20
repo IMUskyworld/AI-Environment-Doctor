@@ -1,9 +1,12 @@
 # envdoctor 开发文档（AI Environment Doctor）
 
-版本：v0.1（2026-09-22）
-状态：MVP 已实现并验收，逐条核验见 §25。
+版本：v0.2（2026-10-20）
+状态：MVP 已实现并验收（逐条核验见 §25），Web 控制台见 §26。
 
 一句话：把「这个 AI 项目能不能在我这台机器上跑」从猜测变成**带证据的结论**，并且真的在临时环境里装一遍、跑一遍来验证。
+
+支持平台：**Windows 10/11 x64**（唯一官方支持的平台；CI 只跑 Windows。代码本身不绑定操作系统，
+在 WSL2/Linux 上多半也能跑，但不在支持与保证范围内）。
 
 ---
 
@@ -695,6 +698,7 @@ fixture 项目位于 `tests/fixtures/projects/`，是最小但真实的项目形
 | 验证后端 | uv（不做 conda 执行） | 本机有 uv 无 conda；uv 创建临时环境快且干净 |
 | 临时环境位置 | 系统临时目录，永不在项目内 | 保证「用户的机器神圣不可侵犯」 |
 | 静态-only 不报 runs | 是（红线） | 诚实性；「没实测就不知道」 |
+| 支持平台 | **只支持 Windows 10/11 x64** | 项目目标场景就是 Windows + NVIDIA + PyTorch；Linux 不做测试与保证（代码不绑定平台，WSL2 里属于尽力而为） |
 
 ### 23.2 剩余待确认（不阻塞）
 
@@ -708,7 +712,7 @@ fixture 项目位于 `tests/fixtures/projects/`，是最小但真实的项目形
 2. **本机无 GPU / NVML / nvidia-smi**：GPU 路径只能靠 fake 与样本输出测试；真卡验证交给 3090（`-m gpu`）。
 3. **控制台 cp936**：CLI 入口 `reconfigure(encoding="utf-8", errors="replace")`；子进程输出解码永不假设 UTF-8。
 4. **网络**：开发期依赖安装建议走镜像（`UV_DEFAULT_INDEX=<mirror>`，国内更稳）；安装源可达性预检正是为了在网络受限时给出清晰指引而不是空等超时。
-5. **无 WSL / Docker**：Linux 结论只能在 CI 或用户机器上得出，不能谎称已验证。
+5. **无 WSL / Docker**：Linux 不是支持目标（见 §23.1 的平台策略），不在本机与 CI 的验证范围内。
 6. **`uv` 是真实验证的硬依赖**：`verify` 阶段靠 `uv venv` / `uv pip install` 建一次性环境。缺 `uv` 时 envdoctor 明确跳过验证并把 `verify_performed` 记为 false（不谎报跑过），`overall=unknown`。
 
 ## 25. 实现状态（MVP 完成定义逐条核验）
@@ -753,7 +757,7 @@ fixture 项目位于 `tests/fixtures/projects/`，是最小但真实的项目形
 
 1. **GPU 真机路径**：`pytest -m gpu` 与真实驱动的 `nvidia-smi` 解析需要 3090 Windows 机器；
    GPU 相关逻辑在本机由 fake 与样本输出覆盖（`tests/fixtures/smi/`）。
-2. **Linux 腿**：本机无 WSL/Docker，Linux 行为只能由 CI（ubuntu-latest）覆盖。
+2. **Linux 腿**：不在支持范围（§23.1），CI 只跑 Windows；WSL2 里的行为属于「尽力而为」。
 3. **真实控制台 Ctrl+C**：合成中断已覆盖清理与退出码；LabBox 的经验是真实终端验证能挖出合成测试挖不到的 bug，建议在真机终端人工触发一次（`doctor` 运行中按一次 Ctrl+C）。
 4. **发布动作**：仓库地址、远端与首次推送由所有者执行（`git remote add origin …` + `git push`）。
 

@@ -8,7 +8,8 @@
 
 ## 报告漏洞
 
-请用 GitHub 的私密漏洞报告通道（Security → Report a vulnerability），
+请用 GitHub 的私密漏洞报告通道
+（[Report a vulnerability](https://github.com/IMUskyworld/envdoctor/security/advisories/new)），
 **不要**用公开 issue 报告安全问题。报告里请写明：
 
 - 受影响版本与复现步骤；

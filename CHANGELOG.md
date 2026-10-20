@@ -17,6 +17,12 @@
   写操作同源校验、真实验证需显式同意。
   Web 与 CLI 共用 `.envdoctor/runs/` 产物，报告只有一份真相。
 
+### 变更
+
+- **支持平台收敛为 Windows 10/11 x64**：CI 只跑 Windows（不再跑 ubuntu），
+  README / DEVELOPMENT.md / CONTRIBUTING 明确写出支持策略；代码本身不绑定操作系统，
+  WSL2/Linux 属于尽力而为，不作保证。
+
 ## [0.1.0] - 2026-10-20
 
 首个公开版本：扫描项目 + 探查机器 + 规则引擎判定 + 一次性环境真实验证。

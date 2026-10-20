@@ -1,4 +1,12 @@
 # 只允许用模板提问，避免没有上下文的空白 issue。
-# （安全漏洞请按 SECURITY.md 的说明走 GitHub 的「Report a vulnerability」通道，
-#   不要用公开 issue；该入口在仓库的 Security 标签页里，无需在此写死仓库地址。）
 blank_issues_enabled: false
+contact_links:
+  - name: 安全问题报告
+    url: https://github.com/IMUskyworld/envdoctor/security/advisories/new
+    about: 请不要用公开 issue 报告安全问题；见 SECURITY.md
+  - name: 变更历史
+    url: https://github.com/IMUskyworld/envdoctor/blob/main/CHANGELOG.md
+    about: 每个版本都记了什么
+  - name: 开发与贡献
+    url: https://github.com/IMUskyworld/envdoctor/blob/main/CONTRIBUTING.md
+    about: 怎么跑质量闸门、怎么加一条知识库规则

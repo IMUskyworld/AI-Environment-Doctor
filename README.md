@@ -1,5 +1,9 @@
 # envdoctor（AI Environment Doctor）
 
+[![CI](https://github.com/IMUskyworld/envdoctor/actions/workflows/ci.yml/badge.svg)](https://github.com/IMUskyworld/envdoctor/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
+
 **「这个 AI 项目能不能在我这台机器上跑？」——用证据回答，而不是靠猜。**
 
 envdoctor 扫描一个 GitHub 项目（或本地项目）的依赖、Python 约束、CUDA 线索与 ML 栈，探查你的机器（GPU / 驱动 / 解释器 / 工具链 / uv / conda），按带来源的规则库给出逐项判定，最后**在系统临时目录里真的创建一个一次性环境、真的安装、真的跑一遍 import 冒烟和最小模型**，然后告诉你：能不能跑、差什么、先修哪个。
@@ -8,7 +12,10 @@ envdoctor 扫描一个 GitHub 项目（或本地项目）的依赖、Python 约�
 envdoctor doctor https://github.com/xxx/yyy
 ```
 
-专为 **Windows + NVIDIA + PyTorch + uv/conda + CUDA** 场景打磨；核心机制跨平台。
+**支持平台：Windows 10/11 x64**（本项目只面向 Windows 打磨与测试；代码本身不绑定平台，
+在 WSL2 里也能跑，但不在官方支持与 CI 覆盖范围内）。
+
+专为 **Windows + NVIDIA + PyTorch + uv/conda + CUDA** 场景打磨。
 
 | | |
 | --- | --- |
@@ -142,6 +149,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check.ps1   # 完整
 - 基准：`python scripts/bench_overhead.py` 对照性能目标。
 - 规格书：[DEVELOPMENT.md](DEVELOPMENT.md)（产品定义、数据协议、安全模型、测试策略、决策记录）。
 - 决策记录：[docs/adr/](docs/adr/)。
+- 问题反馈：[Issues](https://github.com/IMUskyworld/envdoctor/issues) · 变更历史：[CHANGELOG.md](CHANGELOG.md)
 
 ## 目录结构
 
