@@ -104,6 +104,16 @@ HARD_GPU_SIGNALS = {
     "cupy-cuda12x",
 }
 
+# 只用于「查询」GPU 的绑定库：装了它们并不等于「需要 GPU 计算」。
+# nvidia-ml-py / pynvml 在没有 NVIDIA 驱动的机器上照样能装能用（只是查不到 GPU），
+# 把它们当成硬 GPU 信号会让监控类工具被误判成「必须要有 GPU」。
+GPU_QUERY_ONLY_PACKAGES = {
+    "nvidia-ml-py",
+    "nvidia-ml-py3",
+    "pynvml",
+    "nvidia-pyindex",
+}
+
 ROLE_ORDER = {MlRole.CORE: 0, MlRole.EXTENSION: 1, MlRole.LIBRARY: 2, MlRole.TOOLING: 3}
 
 _CUDA_INDEX_RE = re.compile(r"/whl/(cu\d{2,3})")
@@ -396,6 +406,14 @@ def _role_for(name: str) -> MlRole | None:
     return None
 
 
+def _requires_gpu_compute(name: str) -> bool:
+    """True when the package implies *running on* a GPU (not just querying one)."""
+    lowered = name.lower()
+    if lowered in GPU_QUERY_ONLY_PACKAGES:
+        return False
+    return lowered.startswith("nvidia-") or lowered.startswith("cupy")
+
+
 def _build_ml_stack(dependencies: list[Dependency]) -> list[MlStackItem]:
     by_name: dict[str, MlStackItem] = {}
     for dep in dependencies:
@@ -459,8 +477,7 @@ def _infer_cuda(
 
     strength = RequirementStrength.NONE
     hard = any(_role_for(item.name) == MlRole.EXTENSION for item in ml_stack) or any(
-        item.name in HARD_GPU_SIGNALS or item.name.startswith("nvidia-") or item.name.startswith("cupy")
-        for item in ml_stack
+        item.name in HARD_GPU_SIGNALS or _requires_gpu_compute(item.name) for item in ml_stack
     )
     soft = any(item.role == MlRole.CORE for item in ml_stack)
     if hard or (requested is not None):
