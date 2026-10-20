@@ -1,0 +1,85 @@
+name: Bug 报告
+description: 报告错误行为或误判结论
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！envdoctor 的每条结论都带证据，报告误判时请附上报告与证据链。
+
+        提示：先用 `envdoctor doctor <目标> --no-verify --json report.json` 复现，
+        再把 `report.json` 贴上来，比截图有效得多。
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 发生了什么
+      description: 期望的行为 vs 实际的行为
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤
+      description: |
+        1. 执行的命令（例如 `envdoctor doctor https://github.com/owner/repo --no-verify`）
+        2. 目标项目 / 依赖文件
+        3. 实际输出或错误
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: report-json
+    attributes:
+      label: report.json 内容
+      description: 粘贴 `report.json`（含 verdicts 与 checkpoints 的证据链）
+      render: json
+
+  - type: input
+    id: version
+    attributes:
+      label: envdoctor 版本
+      placeholder: "envdoctor 0.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: 操作系统
+      options:
+        - Windows 11
+        - Windows 10
+        - Linux
+        - macOS
+        - 其它
+    validations:
+      required: true
+
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU 与驱动
+      description: 显卡型号与驱动版本（没有就写「无 GPU」）
+      placeholder: "RTX 3090 / 551.61"
+
+  - type: input
+    id: python
+    attributes:
+      label: Python 版本
+      placeholder: "3.11.9"
+
+  - type: input
+    id: uv
+    attributes:
+      label: uv 版本
+      description: 真实验证阶段依赖 uv
+      placeholder: "0.13.1"
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: 其他信息
+      description: 截图、日志片段等

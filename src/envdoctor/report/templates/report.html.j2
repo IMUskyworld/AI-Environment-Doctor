@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>envdoctor 报告 · {{ report.target.original }}</title>
+<style>
+  :root {
+    --bg: #0f1115; --card: #171a21; --border: #2a2f3a; --text: #e6e8ee;
+    --dim: #9aa3b2; --ok: #3fb950; --warn: #d29922; --blocked: #f85149; --unknown: #a371f7;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.6 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 32px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+  .meta { color: var(--dim); font-size: 13px; }
+  .banner { margin: 20px 0; padding: 18px 20px; border-radius: 10px; background: var(--card);
+            border-left: 6px solid var(--dim); }
+  .banner .overall { font-size: 20px; font-weight: 700; letter-spacing: .5px; }
+  .banner .reason { color: var(--dim); margin-top: 4px; }
+  .state-ok { color: var(--ok); } .banner.state-ok { border-left-color: var(--ok); }
+  .state-warn { color: var(--warn); } .banner.state-warn { border-left-color: var(--warn); }
+  .state-blocked { color: var(--blocked); } .banner.state-blocked { border-left-color: var(--blocked); }
+  .state-unknown { color: var(--unknown); } .banner.state-unknown { border-left-color: var(--unknown); }
+  .state-na { color: var(--dim); }
+  table { width: 100%; border-collapse: collapse; background: var(--card);
+          border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--dim); font-weight: 600; font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  .pill { display: inline-block; min-width: 66px; font-size: 12px; font-weight: 700; }
+  .dim { color: var(--dim); font-size: 13px; }
+  .kv { display: grid; grid-template-columns: 160px 1fr; gap: 4px 12px; background: var(--card);
+        border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .kv div:nth-child(odd) { color: var(--dim); }
+  ul.fixes { padding-left: 20px; }
+  ul.fixes li { margin: 6px 0; }
+  code { background: #10131a; border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px;
+         font: 13px/1.5 Consolas, monospace; }
+  details { margin-top: 6px; } summary { cursor: pointer; color: var(--dim); font-size: 13px; }
+  footer { margin-top: 40px; color: var(--dim); font-size: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>envdoctor 报告</h1>
+  <div class="meta">
+    工具 {{ report.tool.name }} v{{ report.tool.version }} · run {{ report.run_id }} · 生成于 {{ report.generated_at }}
+  </div>
+  <div class="meta">目标：{{ report.target.kind.value }} · {{ report.target.original }}{% if report.target.commit %} · commit {{ report.target.commit[:12] }}{% endif %}</div>
+
+  <div class="banner {{ overall_class[report.overall] }}">
+    <div class="overall {{ overall_class[report.overall] }}">{{ report.overall.value|upper }}</div>
+    <div class="reason">{{ report.overall_reason }}</div>
+  </div>
+
+  <h2>判定明细</h2>
+  <table>
+    <tr><th style="width:90px">状态</th><th style="width:110px">方面</th><th>结论</th></tr>
+    {% for verdict in report.verdicts %}
+    <tr>
+      <td><span class="pill {{ verdict_state_class[verdict.state.value] }}">{{ verdict.state.value }}</span></td>
+      <td class="dim">{{ verdict.aspect.value }}</td>
+      <td>
+        <strong>{{ verdict.title }}</strong>
+        <div class="dim">{{ verdict.summary }}</div>
+        {% if verdict.fix %}
+        <div class="dim">修复：{{ verdict.fix.text }}{% if verdict.fix.command %} · <code>{{ verdict.fix.command }}</code>{% endif %}</div>
+        {% endif %}
+        {% if verdict.evidence %}
+        <details>
+          <summary>证据（{{ verdict.evidence|length }}）</summary>
+          <ul>
+            {% for item in verdict.evidence %}
+            <li class="dim">{{ item.detail }}{% if item.source %} <span class="dim">— {{ item.source }}</span>{% endif %}</li>
+            {% endfor %}
+          </ul>
+        </details>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  {% if report.checkpoints %}
+  <h2>真实验证检查点</h2>
+  <table>
+    <tr><th style="width:90px">状态</th><th>步骤</th><th style="width:80px">耗时</th><th>说明</th></tr>
+    {% for checkpoint in report.checkpoints %}
+    <tr>
+      <td><span class="pill {{ checkpoint_state_class[checkpoint.state.value] }}">{{ checkpoint.state.value }}</span></td>
+      <td>{{ checkpoint.title }}</td>
+      <td class="dim">{{ "%.1fs"|format(checkpoint.seconds) if checkpoint.seconds else "—" }}</td>
+      <td class="dim">{{ checkpoint.skip_reason or checkpoint.detail or "—" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+  {% if report.explain %}
+  <h2>AI 解释{% if report.explain.model %}（{{ report.explain.model }}）{% endif %}</h2>
+  <div class="kv"><div style="grid-column: span 2">{{ report.explain.text or report.explain.error }}</div></div>
+  {% endif %}
+
+  <h2>项目画像</h2>
+  <div class="kv">
+    <div>Python 要求</div><div>{{ report.scan.python.requires or "未声明" }}{% if report.scan.python.source %} <span class="dim">（{{ report.scan.python.source }}）</span>{% endif %}</div>
+    <div>包管理器</div><div>{{ report.scan.package_managers|join("、") or "未检测到" }}</div>
+    <div>ML 栈</div><div>{% for item in report.scan.ml_stack %}{{ item.name }}{% if item.specifier %}{{ item.specifier }}{% endif %} <span class="dim">({{ item.role.value }})</span>{% if not loop.last %} · {% endif %}{% else %}未检测到{% endfor %}</div>
+    <div>CUDA 诉求</div><div>{{ report.scan.cuda.requested_runtime or "未显式声明" }} <span class="dim">（GPU 需求：{{ report.scan.cuda.gpu_required_strength.value }}）</span></div>
+    <div>入口（猜测）</div><div>{{ report.scan.entrypoints|join("、") or "—" }}</div>
+  </div>
+
+  <h2>机器画像</h2>
+  <div class="kv">
+    <div>系统</div><div>{{ report.probe.os.name }} {{ report.probe.os.release }} · {{ report.probe.os.arch }}</div>
+    <div>Python</div><div>{{ report.probe.python.version }} <span class="dim">{{ report.probe.python.executable }}</span></div>
+    <div>工具链</div><div>uv {{ report.probe.tooling.uv or "—" }} · git {{ report.probe.tooling.git or "—" }} · conda {{ report.probe.tooling.conda or "—" }}</div>
+    <div>GPU</div>
+    <div>
+      {% if report.probe.gpu.present %}
+        {% for device in report.probe.gpu.devices %}{{ device.name }}{% if device.vram_bytes %}（{{ (device.vram_bytes / 1073741824)|round(1) }} GiB）{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}
+        <span class="dim">驱动 {{ report.probe.gpu.driver_version or "未知" }}{% if report.probe.gpu.driver_max_cuda %} · CUDA ≤ {{ report.probe.gpu.driver_max_cuda }}{% endif %}</span>
+      {% else %}
+        未检测到 <span class="dim">（{{ report.probe.gpu.reason or "原因未知" }}）</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if report.scan.warnings or report.probe.warnings %}
+  <h2>扫描 / 探查提示</h2>
+  <ul>
+    {% for note in report.scan.warnings %}<li class="dim">{{ note.code }}：{{ note.message }}</li>{% endfor %}
+    {% for note in report.probe.warnings %}<li class="dim">{{ note.code }}：{{ note.message }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+
+  <footer>
+    envdoctor 只做诊断与一次性环境验证，不修改用户环境；结论基于已采集证据，证据不足处标记为 unknown。
+  </footer>
+</main>
+</body>
+</html>

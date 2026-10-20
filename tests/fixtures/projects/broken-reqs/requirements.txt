@@ -1,0 +1,4 @@
+==2.4.1
+numpy>=1.0
+-r missing.txt
+torch==2.4.1+cu124

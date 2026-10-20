@@ -1,0 +1,205 @@
+{
+  "meta": {
+    "description": "Curated, source-backed compatibility rules. Each rule maps to one Verdict. Conditions are evaluated by envdoctor.compat.engine; keep kinds limited to the implemented DSL.",
+    "reviewed_on": "2026-10-20"
+  },
+  "rules": [
+    {
+      "id": "tf_gpu_windows_post_210",
+      "title": "TensorFlow 2.11+ 在 Windows 无原生 GPU 支持",
+      "severity": "warning",
+      "aspect": "ecosystem",
+      "platforms": ["windows"],
+      "when": {
+        "all": [
+          { "kind": "lib_present", "name": "tensorflow" },
+          { "kind": "lib_may_install_at_or_above", "name": "tensorflow", "version": "2.11" }
+        ]
+      },
+      "message": "TensorFlow 2.11 起已停止 Windows 原生 GPU 支持（2.10 是最后一代）。当前依赖可能解析到 2.11+，在 Windows 上只能 CPU 运行。",
+      "fix": "GPU 训练改用 WSL2；或固定 tensorflow==2.10.*（并接受旧版本的限制）",
+      "source": {
+        "name": "TensorFlow 官方安装文档 (pip / windows-native)",
+        "url": "https://www.tensorflow.org/install/pip#windows-native"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "jax_windows_no_gpu_wheel",
+      "title": "JAX 在 Windows 无官方 GPU wheel",
+      "severity": "warning",
+      "aspect": "ecosystem",
+      "platforms": ["windows"],
+      "when": { "all": [{ "kind": "lib_present", "name": "jax" }] },
+      "message": "JAX 官方不为 Windows 提供 GPU wheel（CPU 版本可用）。",
+      "fix": "需要 GPU 时使用 WSL2 或 Linux；Windows 上仅限 CPU",
+      "source": {
+        "name": "JAX 官方安装文档",
+        "url": "https://jax.readthedocs.io/en/latest/installation.html"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "flash_attn_windows_source_build",
+      "title": "flash-attn 在 Windows 需源码编译",
+      "severity": "warning",
+      "aspect": "ecosystem",
+      "platforms": ["windows"],
+      "when": { "all": [{ "kind": "lib_present", "name": "flash-attn" }] },
+      "message": "flash-attn 没有官方 Windows 预编译 wheel；安装需要 CUDA toolkit + MSVC，编译耗时较长（可能 30 分钟以上）。",
+      "fix": "预留较长时间安装；或改用 Linux 环境；安装失败时优先检查 CUDA toolkit 与 MSVC 是否齐全",
+      "source": {
+        "name": "flash-attention 仓库 README (Dao-AILab)",
+        "url": "https://github.com/Dao-AILab/flash-attention"
+      },
+      "confidence": "medium"
+    },
+    {
+      "id": "bitsandbytes_windows_old",
+      "title": "bitsandbytes 旧版本不支持 Windows",
+      "severity": "warning",
+      "aspect": "ecosystem",
+      "platforms": ["windows"],
+      "when": {
+        "all": [
+          { "kind": "lib_present", "name": "bitsandbytes" },
+          { "kind": "lib_may_install_below", "name": "bitsandbytes", "version": "0.43" }
+        ]
+      },
+      "message": "bitsandbytes 0.43 之前没有 Windows 官方支持；依赖未固定到 ≥0.43 时可能装到不支持的版本。",
+      "fix": "固定 bitsandbytes>=0.43",
+      "source": {
+        "name": "bitsandbytes releases (Windows support since 0.43)",
+        "url": "https://github.com/bitsandbytes-foundation/bitsandbytes/releases"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "triton_windows_old",
+      "title": "triton 旧版本无官方 Windows wheel",
+      "severity": "warning",
+      "aspect": "ecosystem",
+      "platforms": ["windows"],
+      "when": {
+        "all": [
+          { "kind": "lib_present", "name": "triton" },
+          { "kind": "lib_may_install_below", "name": "triton", "version": "3.0" }
+        ]
+      },
+      "message": "triton 3.x 起才提供官方 Windows wheel；未固定版本时可能解析到无 Windows 支持的旧版本。",
+      "fix": "固定 triton>=3.0（版本还需与 torch 匹配）",
+      "source": {
+        "name": "triton releases (official Windows wheels from 3.x)",
+        "url": "https://github.com/triton-lang/triton/releases"
+      },
+      "confidence": "medium"
+    },
+    {
+      "id": "xformers_torch_pin",
+      "title": "xformers 与 torch 版本强绑定",
+      "severity": "info",
+      "aspect": "ecosystem",
+      "platforms": ["windows", "linux"],
+      "when": {
+        "all": [
+          { "kind": "lib_present", "name": "xformers" },
+          { "kind": "lib_present", "name": "torch" }
+        ]
+      },
+      "message": "xformers 与 torch 版本强绑定（同一发布列车）。torch 一旦变化，xformers 必须跟着换版本。",
+      "fix": "按最终解析出的 torch 版本选择对应的 xformers 发布；实测阶段会验证 import",
+      "source": {
+        "name": "xformers README (version compatibility)",
+        "url": "https://github.com/facebookresearch/xformers"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "deepspeed_windows",
+      "title": "deepspeed 主要支持 Linux",
+      "severity": "warning",
+      "aspect": "ecosystem",
+      "platforms": ["windows"],
+      "when": { "all": [{ "kind": "lib_present", "name": "deepspeed" }] },
+      "message": "deepspeed 官方主要支持 Linux；Windows 上需要 triton/编译器变通，部分算子不可用。",
+      "fix": "训练改用 Linux/WSL2；或参考社区 Windows 变通方案并预期功能受限",
+      "source": {
+        "name": "DeepSpeed README (Windows support notes)",
+        "url": "https://github.com/microsoft/DeepSpeed"
+      },
+      "confidence": "medium"
+    },
+    {
+      "id": "vllm_no_windows_support",
+      "title": "vLLM 官方不支持 Windows 原生运行",
+      "severity": "blocker",
+      "aspect": "ecosystem",
+      "platforms": ["windows"],
+      "when": { "all": [{ "kind": "lib_present", "name": "vllm" }] },
+      "message": "vLLM 官方文档明确写着「不支持 Windows 原生运行」：官方 wheel 只提供 Linux 构建，Windows 上 pip 安装会直接失败。",
+      "fix": "改用 WSL2（官方推荐路径）或 Linux 机器；社区 Windows 分支不受支持，风险自负",
+      "source": {
+        "name": "vLLM 安装文档 (GPU)",
+        "url": "https://docs.vllm.ai/en/latest/getting_started/installation/gpu/"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "apex_windows_experimental",
+      "title": "NVIDIA Apex 在 Windows 上只是实验性支持",
+      "severity": "warning",
+      "aspect": "ecosystem",
+      "platforms": ["windows"],
+      "when": { "all": [{ "kind": "lib_present", "name": "apex" }] },
+      "message": "Apex README 把 Windows 标为 [Experimental]：带 CUDA/C++ 扩展的构建通常失败，纯 Python 构建才可能成功，且没有融合算子。",
+      "fix": "训练改用 Linux/WSL2；Windows 上只用纯 Python 构建并接受性能损失",
+      "source": {
+        "name": "NVIDIA Apex README ([Experimental] Windows)",
+        "url": "https://github.com/NVIDIA/apex"
+      },
+      "confidence": "medium"
+    },
+    {
+      "id": "numpy2_torch_abi_break",
+      "title": "NumPy 2.x 与旧版 torch 存在 ABI 不兼容",
+      "severity": "warning",
+      "aspect": "deps",
+      "when": {
+        "all": [
+          { "kind": "lib_present", "name": "numpy" },
+          { "kind": "lib_may_install_at_or_above", "name": "numpy", "version": "2.0" },
+          { "kind": "lib_present", "name": "torch" },
+          { "kind": "lib_pinned_below", "name": "torch", "version": "2.3" }
+        ]
+      },
+      "message": "NumPy 2.0 破坏了 C ABI：针对 NumPy 1.x 编译的二进制在 NumPy 2.x 下会直接 ImportError。torch 2.3 之前的 wheel 是按 NumPy 1.x 编译的，导入时会报「A module that was compiled using NumPy 1.x cannot be run in NumPy 2.x」。",
+      "fix": "把 torch 升到 ≥2.3（首个按 NumPy 2.0 编译的版本），或把 numpy 固定在 <2",
+      "source": {
+        "name": "NumPy 2.0.0 release notes（ABI break）与 PyTorch 2.3.0 release notes",
+        "url": "https://numpy.org/doc/2.0/release/2.0.0-notes.html"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "onnxruntime_cudnn_major_mismatch",
+      "title": "onnxruntime-gpu 与 torch 的 cuDNN 主版本可能冲突",
+      "severity": "warning",
+      "aspect": "deps",
+      "when": {
+        "all": [
+          { "kind": "lib_present", "name": "onnxruntime-gpu" },
+          { "kind": "lib_may_install_at_or_above", "name": "onnxruntime-gpu", "version": "1.19" },
+          { "kind": "lib_present", "name": "torch" },
+          { "kind": "lib_pinned_below", "name": "torch", "version": "2.4" }
+        ]
+      },
+      "message": "ONNX Runtime 1.19+ 用 cuDNN 9 构建，而 torch ≤2.3 用 cuDNN 8：cuDNN 8 与 cuDNN 9 的二进制不兼容，两者同装时 ORT 的 CUDA EP 可能加载失败。",
+      "fix": "把 torch 升到 ≥2.4（cuDNN 9），或把 onnxruntime-gpu 固定到 1.18.0（cuDNN 8）",
+      "source": {
+        "name": "ONNX Runtime CUDA Execution Provider（cuDNN 8/9 兼容性说明）",
+        "url": "https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html"
+      },
+      "confidence": "medium"
+    }
+  ]
+}

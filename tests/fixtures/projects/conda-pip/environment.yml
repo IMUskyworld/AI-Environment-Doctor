@@ -1,0 +1,11 @@
+name: demo
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pytorch-cuda=12.1
+  - pip:
+      - torch==2.4.0
+      - xformers
+      - numpy>=1.26

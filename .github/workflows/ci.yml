@@ -1,0 +1,103 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: ${{ matrix.os }} / py${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen --extra dev --python ${{ matrix.python }}
+
+      - name: Lint (ruff)
+        run: uv run ruff check src tests scripts
+
+      - name: Format check (ruff)
+        run: uv run ruff format --check src tests scripts
+
+      - name: Types (pyright, library code only)
+        run: uv run pyright
+
+      - name: Schemas are current
+        run: uv run python scripts/export_schemas.py --check
+
+      - name: Tests (no gpu)
+        run: uv run pytest -q -m "not gpu"
+
+      # The MVP contract: every §22 criterion has executable evidence.
+      - name: MVP audit (DEVELOPMENT.md 22)
+        run: uv run python scripts/verify_mvp.py --skip-tests
+
+      - name: Performance overhead (non-blocking)
+        continue-on-error: true
+        run: uv run python scripts/bench_overhead.py
+
+  package:
+    name: build & install (wheel smoke test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+
+      - name: Build distributions
+        run: uv build --out-dir dist
+
+      - name: Install the built wheel into a clean environment
+        run: |
+          uv venv /tmp/envdoctor-wheel --python 3.11
+          uv pip install --python /tmp/envdoctor-wheel/bin/python dist/*.whl
+
+      - name: Console script works
+        run: /tmp/envdoctor-wheel/bin/envdoctor version
+
+      - name: Module entry point works
+        run: /tmp/envdoctor-wheel/bin/python -m envdoctor version
+
+      - name: Self-contained HTML report
+        run: |
+          /tmp/envdoctor-wheel/bin/envdoctor doctor . --no-verify --workdir /tmp/envdoctor-work >/dev/null
+          report=$(ls -1 /tmp/envdoctor-work/runs/*/report.html | head -n 1)
+          test -f "$report"
+          ! grep -E '(src|href)="https?://' "$report"
+
+  gpu:
+    name: GPU checks (manual, real hardware)
+    runs-on: [self-hosted, windows, NVIDIA]
+    needs: quality
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+      - run: uv sync --frozen --extra dev
+      - run: uv run pytest -q -m gpu

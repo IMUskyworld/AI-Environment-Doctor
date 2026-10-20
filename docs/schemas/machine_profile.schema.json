@@ -1,0 +1,330 @@
+{
+  "$defs": {
+    "CurrentPython": {
+      "properties": {
+        "console_encoding": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Console Encoding"
+        },
+        "executable": {
+          "title": "Executable",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "executable"
+      ],
+      "title": "CurrentPython",
+      "type": "object"
+    },
+    "GpuDevice": {
+      "properties": {
+        "compute_capability": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Compute Capability"
+        },
+        "index": {
+          "title": "Index",
+          "type": "integer"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "vram_bytes": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Vram Bytes"
+        }
+      },
+      "required": [
+        "index",
+        "name"
+      ],
+      "title": "GpuDevice",
+      "type": "object"
+    },
+    "GpuInfo": {
+      "properties": {
+        "devices": {
+          "items": {
+            "$ref": "#/$defs/GpuDevice"
+          },
+          "title": "Devices",
+          "type": "array"
+        },
+        "driver_max_cuda": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Driver Max Cuda"
+        },
+        "driver_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Driver Version"
+        },
+        "present": {
+          "default": false,
+          "title": "Present",
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "source": {
+          "$ref": "#/$defs/GpuSource",
+          "default": "none"
+        }
+      },
+      "title": "GpuInfo",
+      "type": "object"
+    },
+    "GpuSource": {
+      "enum": [
+        "nvidia-smi",
+        "nvml",
+        "none"
+      ],
+      "title": "GpuSource",
+      "type": "string"
+    },
+    "Interpreter": {
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "path",
+        "source"
+      ],
+      "title": "Interpreter",
+      "type": "object"
+    },
+    "Note": {
+      "description": "A non-fatal observation attached to scan/probe results.",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "Note",
+      "type": "object"
+    },
+    "OsInfo": {
+      "properties": {
+        "arch": {
+          "title": "Arch",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "release": {
+          "title": "Release",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "release",
+        "arch"
+      ],
+      "title": "OsInfo",
+      "type": "object"
+    },
+    "Tooling": {
+      "properties": {
+        "conda": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Conda"
+        },
+        "git": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Git"
+        },
+        "pip": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pip"
+        },
+        "uv": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Uv"
+        }
+      },
+      "title": "Tooling",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "collected_at": {
+      "title": "Collected At",
+      "type": "string"
+    },
+    "gpu": {
+      "$ref": "#/$defs/GpuInfo"
+    },
+    "interpreters": {
+      "items": {
+        "$ref": "#/$defs/Interpreter"
+      },
+      "title": "Interpreters",
+      "type": "array"
+    },
+    "memory_bytes": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Memory Bytes"
+    },
+    "os": {
+      "$ref": "#/$defs/OsInfo"
+    },
+    "python": {
+      "$ref": "#/$defs/CurrentPython"
+    },
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "temp_disk_free_bytes": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Temp Disk Free Bytes"
+    },
+    "tooling": {
+      "$ref": "#/$defs/Tooling"
+    },
+    "warnings": {
+      "items": {
+        "$ref": "#/$defs/Note"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "os",
+    "python",
+    "collected_at"
+  ],
+  "title": "MachineProfile",
+  "type": "object"
+}

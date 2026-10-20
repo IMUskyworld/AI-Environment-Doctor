@@ -1,0 +1,160 @@
+{
+  "$defs": {
+    "Aspect": {
+      "enum": [
+        "python",
+        "platform",
+        "gpu",
+        "cuda",
+        "deps",
+        "ecosystem",
+        "verify"
+      ],
+      "title": "Aspect",
+      "type": "string"
+    },
+    "Confidence": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "Confidence",
+      "type": "string"
+    },
+    "Evidence": {
+      "properties": {
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        }
+      },
+      "required": [
+        "kind",
+        "detail"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "Fix": {
+      "properties": {
+        "command": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Command"
+        },
+        "kind": {
+          "default": "instruction",
+          "title": "Kind",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "Fix",
+      "type": "object"
+    },
+    "VerdictState": {
+      "enum": [
+        "ok",
+        "warn",
+        "blocked",
+        "unknown",
+        "not_applicable"
+      ],
+      "title": "VerdictState",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "aspect": {
+      "$ref": "#/$defs/Aspect"
+    },
+    "confidence": {
+      "$ref": "#/$defs/Confidence",
+      "default": "high"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "fix": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Fix"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "rule_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rule Id"
+    },
+    "state": {
+      "$ref": "#/$defs/VerdictState"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "aspect",
+    "state",
+    "title",
+    "summary"
+  ],
+  "title": "Verdict",
+  "type": "object"
+}

@@ -1,0 +1,75 @@
+{
+  "$defs": {
+    "CheckpointState": {
+      "enum": [
+        "pass",
+        "fail",
+        "skip",
+        "error"
+      ],
+      "title": "CheckpointState",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "detail": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Detail"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "log_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Log Path"
+    },
+    "seconds": {
+      "default": 0.0,
+      "title": "Seconds",
+      "type": "number"
+    },
+    "skip_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Skip Reason"
+    },
+    "state": {
+      "$ref": "#/$defs/CheckpointState"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "state"
+  ],
+  "title": "Checkpoint",
+  "type": "object"
+}

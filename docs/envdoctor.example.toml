@@ -1,0 +1,28 @@
+# envdoctor 配置示例
+#
+# 放置位置（按优先级）：
+#   1. 命令行 `--config <path>`
+#   2. 当前目录的 `./envdoctor.toml`
+#   3. 用户级配置（Windows: %APPDATA%\envdoctor\config.toml；其它: ~/.config/envdoctor/config.toml）
+#
+# 环境变量优先级最高：ENVDOCTOR_INDEX_URL / ENVDOCTOR_LLM_BASE_URL /
+# ENVDOCTOR_LLM_MODEL / ENVDOCTOR_LLM_API_KEY / ENVDOCTOR_LLM_ENABLED
+
+[defaults]
+# 验证环境使用的安装源（只影响一次性临时环境，不影响你的真实环境）
+# 国内网络建议用镜像，例如：https://pypi.tuna.tsinghua.edu.cn/simple
+index_url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+
+# 安装步骤超时（秒）
+timeout_s = 600
+
+# 是否保留验证用的临时环境（默认 false：跑完即删）
+keep_env = false
+
+[llm]
+# 设为 false 可显式关闭 AI 解释层（即使传了 --explain）；不写这一项则跟随命令行
+enabled = false
+
+# OpenAI 兼容端点与模型；API key 只从环境变量 ENVDOCTOR_LLM_API_KEY 读取，不写在这里
+base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+model = "qwen3.8-flash"

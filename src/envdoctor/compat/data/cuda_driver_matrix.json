@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "description": "CUDA Toolkit runtime version vs the minimum NVIDIA driver version that supports it (Windows / Linux). Values are the GA 'corresponding driver version' rows of the official NVIDIA CUDA Toolkit release notes; the 'note' field records where a row is a derived value (e.g. a shared driver branch) so it stays auditable. Fix or extend this data file rather than the code when NVIDIA updates the table.",
+    "source_url": "https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html",
+    "reviewed_on": "2026-10-20"
+  },
+  "entries": [
+    { "cuda": "11.8", "windows_min_driver": "520.06", "linux_min_driver": "520.61.05" },
+    { "cuda": "12.0", "windows_min_driver": "527.41", "linux_min_driver": "525.60.13" },
+    { "cuda": "12.1", "windows_min_driver": "531.14", "linux_min_driver": "530.30.02" },
+    { "cuda": "12.2", "windows_min_driver": "536.25", "linux_min_driver": "535.54.03" },
+    { "cuda": "12.3", "windows_min_driver": "545.84", "linux_min_driver": "545.23.06" },
+    { "cuda": "12.4", "windows_min_driver": "551.61", "linux_min_driver": "550.54.14" },
+    { "cuda": "12.5", "windows_min_driver": "555.85", "linux_min_driver": "555.42.02" },
+    { "cuda": "12.6", "windows_min_driver": "560.76", "linux_min_driver": "560.28.03" },
+    {
+      "cuda": "12.7",
+      "windows_min_driver": "570.65",
+      "linux_min_driver": "570.26",
+      "note": "12.7 与 12.8 同属 R570 驱动分支，GA 最低驱动与 12.8 GA 一致（官方表只列到 12.8 GA）"
+    },
+    { "cuda": "12.8", "windows_min_driver": "570.65", "linux_min_driver": "570.26" },
+    { "cuda": "12.9", "windows_min_driver": "576.02", "linux_min_driver": "575.51.03" },
+    {
+      "cuda": "13.0",
+      "windows_min_driver": "580",
+      "linux_min_driver": "580.65.06",
+      "note": "13.x 次版本兼容下限为驱动 ≥ 580（官方 minor version compatibility 表）；CUDA 13.0 GA 的 Linux 驱动为 580.65.06"
+    }
+  ]
+}

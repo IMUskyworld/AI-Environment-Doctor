@@ -1,0 +1,346 @@
+{
+  "$defs": {
+    "CudaHints": {
+      "properties": {
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "gpu_required_strength": {
+          "$ref": "#/$defs/RequirementStrength",
+          "default": "none"
+        },
+        "requested_runtime": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requested Runtime"
+        }
+      },
+      "title": "CudaHints",
+      "type": "object"
+    },
+    "Dependency": {
+      "properties": {
+        "extras": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Extras",
+          "type": "array"
+        },
+        "group": {
+          "default": "default",
+          "title": "Group",
+          "type": "string"
+        },
+        "marker": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Marker"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "specifier": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Specifier"
+        }
+      },
+      "required": [
+        "name",
+        "source"
+      ],
+      "title": "Dependency",
+      "type": "object"
+    },
+    "DependencyFile": {
+      "properties": {
+        "find_links": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Find Links",
+          "type": "array"
+        },
+        "index_urls": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Index Urls",
+          "type": "array"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "path"
+      ],
+      "title": "DependencyFile",
+      "type": "object"
+    },
+    "MlRole": {
+      "enum": [
+        "core",
+        "extension",
+        "library",
+        "tooling"
+      ],
+      "title": "MlRole",
+      "type": "string"
+    },
+    "MlStackItem": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        },
+        "role": {
+          "$ref": "#/$defs/MlRole"
+        },
+        "specifier": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Specifier"
+        }
+      },
+      "required": [
+        "name",
+        "role"
+      ],
+      "title": "MlStackItem",
+      "type": "object"
+    },
+    "Note": {
+      "description": "A non-fatal observation attached to scan/probe results.",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "Note",
+      "type": "object"
+    },
+    "PythonRequirement": {
+      "properties": {
+        "requires": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requires"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        }
+      },
+      "title": "PythonRequirement",
+      "type": "object"
+    },
+    "RequirementStrength": {
+      "description": "How strongly a project needs a GPU.\n\n``hard`` — GPU-only signals (flash-attn, xformers, +cuXXX pins, nvidia-* deps ...).\n``soft`` — device-agnostic frameworks (torch / tf / jax) that can fall back to CPU.\n``none`` — nothing device-related found.",
+      "enum": [
+        "hard",
+        "soft",
+        "none"
+      ],
+      "title": "RequirementStrength",
+      "type": "string"
+    },
+    "Target": {
+      "properties": {
+        "cloned": {
+          "default": false,
+          "title": "Cloned",
+          "type": "boolean"
+        },
+        "commit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Commit"
+        },
+        "kind": {
+          "$ref": "#/$defs/TargetKind"
+        },
+        "original": {
+          "title": "Original",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "original",
+        "path"
+      ],
+      "title": "Target",
+      "type": "object"
+    },
+    "TargetKind": {
+      "enum": [
+        "local",
+        "git"
+      ],
+      "title": "TargetKind",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "cuda": {
+      "$ref": "#/$defs/CudaHints"
+    },
+    "dependencies": {
+      "items": {
+        "$ref": "#/$defs/Dependency"
+      },
+      "title": "Dependencies",
+      "type": "array"
+    },
+    "dependency_files": {
+      "items": {
+        "$ref": "#/$defs/DependencyFile"
+      },
+      "title": "Dependency Files",
+      "type": "array"
+    },
+    "entrypoints": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Entrypoints",
+      "type": "array"
+    },
+    "ml_stack": {
+      "items": {
+        "$ref": "#/$defs/MlStackItem"
+      },
+      "title": "Ml Stack",
+      "type": "array"
+    },
+    "package_managers": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Package Managers",
+      "type": "array"
+    },
+    "python": {
+      "$ref": "#/$defs/PythonRequirement"
+    },
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "target": {
+      "$ref": "#/$defs/Target"
+    },
+    "warnings": {
+      "items": {
+        "$ref": "#/$defs/Note"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "target"
+  ],
+  "title": "ScanResult",
+  "type": "object"
+}

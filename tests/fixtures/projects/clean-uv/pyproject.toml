@@ -1,0 +1,8 @@
+[project]
+name = "clean-demo"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.26", "requests"]
+
+[project.scripts]
+clean-demo = "clean_demo:main"

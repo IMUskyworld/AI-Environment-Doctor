@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "description": "Packages whose *published build* pins a CUDA runtime, regardless of what the project declares. Each entry maps a package version threshold to the CUDA runtime its binaries are built against, so the driver requirement becomes visible even when the project never mentions CUDA. Versions and CUDA numbers come from the upstream documentation linked in 'source'.",
+    "reviewed_on": "2026-10-20"
+  },
+  "packages": [
+    {
+      "name": "onnxruntime-gpu",
+      "min_version": "1.21",
+      "cuda": "12.8",
+      "note": "ONNX Runtime 1.21–1.26 的 GPU 包用 CUDA 12.8 构建",
+      "source": {
+        "name": "ONNX Runtime CUDA Execution Provider（版本 → CUDA/cuDNN 对照表）",
+        "url": "https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html"
+      }
+    },
+    {
+      "name": "onnxruntime-gpu",
+      "min_version": "1.27",
+      "cuda": "13.0",
+      "note": "ONNX Runtime 1.27 起 PyPI 上的 GPU 包默认用 CUDA 13.0 构建（12.x 变体需显式选择）",
+      "source": {
+        "name": "ONNX Runtime CUDA Execution Provider（版本 → CUDA/cuDNN 对照表）",
+        "url": "https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html"
+      }
+    }
+  ]
+}
