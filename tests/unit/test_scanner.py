@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from envdoctor.domain.enums import MlRole, RequirementStrength, TargetKind
+from envdoctor.domain.models import Dependency
 from envdoctor.errors import GitError, TargetError
 from envdoctor.paths import WorkLayout
 from envdoctor.scan.scanner import cuda_runtime_from_token, looks_like_git_url, remote_candidate, scan_target
@@ -103,6 +104,32 @@ def test_scan_clean_uv(projects_dir: Path, tmp_path: Path) -> None:
     assert result.ml_stack == []
     assert result.cuda.gpu_required_strength == RequirementStrength.NONE
     assert "clean-demo" in result.entrypoints
+
+
+def test_scan_nvml_probe_only_is_not_gpu_required(projects_dir: Path, tmp_path: Path) -> None:
+    """回归：nvidia-ml-py 只是查询 GPU 的绑定库，不能据此判定「必须要有 GPU」。
+
+    没有这条约束，envdoctor 自己（依赖 nvidia-ml-py）就会被判成 hard GPU 项目，
+    在任何无 GPU 的机器上给出错误的 blocked 结论。
+    """
+    result = _scan(projects_dir / "nvml-probe-only", tmp_path)
+    assert result.cuda.gpu_required_strength == RequirementStrength.NONE
+    assert result.cuda.requested_runtime is None
+    assert [item.name for item in result.ml_stack] == ["nvidia-ml-py"]
+
+
+def test_scan_cuda_runtime_wheel_is_gpu_required(projects_dir: Path, tmp_path: Path) -> None:
+    """对照：真正的 CUDA 运行时 wheel 仍然算硬 GPU 信号。"""
+    result = _scan(projects_dir / "nvml-probe-only", tmp_path)
+    result.dependencies.append(
+        Dependency(name="nvidia-cuda-runtime-cu12", specifier="==12.4.127", source="requirements.txt")
+    )
+    from envdoctor.scan.scanner import _infer_cuda
+
+    hints = _infer_cuda(result.dependencies, result.dependency_files, result.ml_stack)
+    assert hints.gpu_required_strength == RequirementStrength.HARD
+    # 包名只编码了主版本（cu12），minor 未知 → 保守地只报主版本
+    assert hints.requested_runtime == "12"
 
 
 def test_scan_broken_reqs_keeps_going(projects_dir: Path, tmp_path: Path) -> None:
