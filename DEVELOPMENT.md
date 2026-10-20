@@ -77,6 +77,7 @@ envdoctor doctor  <TARGET>   完整流水线：scan → probe → analyze → [�
 envdoctor scan    <TARGET>   只扫项目，输出项目画像
 envdoctor probe              只探查本机，输出机器画像
 envdoctor analyze <TARGET>   scan + probe + 规则引擎，输出逐项判定（不装任何东西）
+envdoctor web                Web 控制台（浏览器界面，§26）
 envdoctor version            版本信息
 ```
 
@@ -164,6 +165,7 @@ envdoctor version            版本信息
 | `verify/` | 验证计划、一次性 venv、安装、冒烟脚本生成与执行、清理 |
 | `report/` | 控制台渲染、report.json 写出、HTML 模板渲染 |
 | `explain/` | 可选 LLM 解释层（OpenAI 兼容，脱敏） |
+| `web/` | Web 控制台：标准库 HTTP 服务、后台任务、单页前端（§26） |
 | `cli/` | typer 命令接线、退出码映射、中断处理 |
 
 ## 6. 运行生命周期
@@ -733,7 +735,8 @@ fixture 项目位于 `tests/fixtures/projects/`，是最小但真实的项目形
 | 22-12 | 质量闸门 | PASS | ruff + ruff format + pyright(0 errors) + pytest 全绿 |
 | 22-13 | 知识库可审计 | PASS | 11 条规则全部带官方来源与修复动作；矩阵覆盖 12 个 CUDA 版本（11.8 ~ 13.0） |
 
-测试规模：132 项常规测试 + 1 项 network 真装真跑（`-m network`）；无 GPU 机器上 `-m gpu` 用例按 marker 跳过。
+测试规模：146 项常规测试 + 1 项 network 真装真跑（`-m network`）；其中 Web 控制台 14 项
+（路由、令牌、回环 Host、同源、知情同意、真实 HTTP 往返）；无 GPU 机器上 `-m gpu` 用例按 marker 跳过。
 
 ### 25.2 性能实测（§18 目标对照）
 
@@ -762,3 +765,67 @@ fixture 项目位于 `tests/fixtures/projects/`，是最小但真实的项目形
   （vLLM、SGLang、megatron-core 等），两类都会在计划 warnings 里点名。
 - §4 的 `--config` 选项在实现中补齐（`doctor` 子命令）。
 - §9.1 的「路径失败再降级 URL」在实现中补齐（`github.com/owner/repo` 这类简写可直接用）。
+
+## 26. Web 控制台（`envdoctor web`）
+
+CLI 之外的第二个前端：**同一套流水线，浏览器界面**。目标用户是「不想在终端里来回翻输出」的人，
+以及需要把诊断结果贴给同事的场景（报告本来就是自包含 HTML）。
+
+### 26.1 设计约束
+
+| 约束 | 理由 |
+| --- | --- |
+| **零新增运行时依赖**（只用标准库 `http.server`） | envdoctor 的卖点是「哪里都能装」；为一个本地界面引入 Web 框架不划算 |
+| 单文件自包含前端（内联 CSS/JS，无 CDN） | 与 `report.html` 同一原则：离线可用、无外部请求、无遥测 |
+| 复用 CLI 的产物协议 | Web 与 CLI 共享 `.envdoctor/runs/`，报告、证据、日志只有一份真相 |
+| 默认只监听 `127.0.0.1` + 一次性令牌 | 这个进程有能力安装第三方代码，必须假设「本机也可能有恶意网页」 |
+
+### 26.2 架构
+
+```
+src/envdoctor/web/
+├── app.py       路由与业务逻辑（与传输层解耦，可脱网单测）
+├── jobs.py      后台任务（线程 + 状态机：queued/running/done/failed）
+├── server.py    HTTP 层（BaseHTTPRequestHandler）+ 安全校验
+└── assets/index.html   单页前端（内联样式与脚本）
+```
+
+- **任务模型**：`analyze`（scan → probe → analyze → 出报告）与 `verify`（装 → 冒烟 → 出报告）。
+  长任务在后台线程跑，浏览器轮询 `/api/jobs/<id>` 看状态与日志；`verify` 阶段还会实时读
+  run 目录下的 `logs/*.log` 尾部，让「正在安装」可见。
+- **API**（全部要求令牌）：
+
+  | 方法 | 路径 | 作用 |
+  | --- | --- | --- |
+  | GET | `/` | 单页界面（令牌注入页面） |
+  | GET | `/api/machine` | 机器画像（含 cwd 与工作目录） |
+  | GET | `/api/runs` | 历史运行列表 |
+  | GET | `/api/runs/<id>` | 该次运行的 `report.json` |
+  | GET | `/api/runs/<id>/report.html` | 自包含 HTML 报告 |
+  | POST | `/api/jobs` | 启动任务：`{kind: analyze\|verify, target\|run_id, consent}` |
+  | GET | `/api/jobs/<id>` | 任务状态、阶段、日志、结果 |
+  | DELETE | `/api/runs/<id>` | 删除一次运行 |
+
+### 26.3 安全模型
+
+1. **默认回环监听**：`--host 127.0.0.1`；`--allow-remote` 才允许对外（启动时明确告警）。
+2. **一次性令牌**：每次启动生成，页面内注入；无令牌一律 403。
+3. **Host 头校验**：必须是回环地址 —— 阻断 DNS rebinding（恶意网页把自己的域名解析到 127.0.0.1 再来打本机）。
+4. **同源校验**：写操作（POST/DELETE）的 `Origin` 必须与 `Host` 同源。
+5. **知情同意**：真实验证必须带 `consent: true`，与 CLI 的确认门同一标准；界面上的复选框写清了风险。
+
+> 历史事故：早期实现把 `Origin: http://127.0.0.1:8766` 的 scheme 当成主机名，导致**同源** POST 被误判为跨源而拒绝。
+> 回归测试 `test_http_accepts_same_origin_post` 与 `test_hostname_strips_scheme_and_port` 锁住这个行为。
+
+## 27. 实现状态（Web 控制台）
+
+| 项 | 状态 |
+| --- | --- |
+| `envdoctor web` 启动、令牌、自动开浏览器 | ✅ |
+| 扫描/判定、证据链、修复建议展示 | ✅ |
+| 真实验证（勾选同意后）：venv→install→imports→device→minimal-model | ✅ 实测 `overall=runs` |
+| 实时日志（读 run 目录 `logs/*.log` 尾部） | ✅ |
+| 历史运行浏览与删除 | ✅ |
+| 安全：令牌 / 回环 Host / 同源 / 显式同意 | ✅ 有单测 |
+| 打包：wheel 与 sdist 都带 `web/assets/index.html` | ✅ 已验证安装后可服务 |
+| 未做 | 多用户/鉴权/持久化任务队列（本地单人工具，刻意不做） |

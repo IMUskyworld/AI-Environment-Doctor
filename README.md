@@ -48,12 +48,31 @@ envdoctor doctor  <目标> --yes        # 跳过确认（CI/批处理）；非�
 envdoctor analyze <目标>              # 判定明细（不装任何东西）
 envdoctor scan    <目标>              # 项目画像
 envdoctor probe                       # 机器画像
+envdoctor web                         # Web 控制台（浏览器界面，见下）
 envdoctor version                     # 版本信息
 ```
 
 常用参数：`--python 3.12` 指定验证解释器、`--index-url` 换安装源、`--smoke-cmd "pytest -q"` 追加冒烟命令、`--keep-env` 保留临时环境、`--json/--html` 另存报告、`--config <path>` 指定配置文件、`--explain` 附加 AI 解释（可选，默认关）。
 
 **退出码**（`doctor`）：`0` 能跑（runs）· `1` 不能跑（cannot_run）· `2` 证据不足（unknown）· `3` 内部错误 · `130` 中断。
+
+## Web 控制台
+
+```bash
+envdoctor web            # 默认 http://127.0.0.1:8765，自动打开浏览器
+envdoctor web --port 9000 --no-open
+```
+
+浏览器里可以：填目标（本地路径或 git URL）→ **扫描并判定** → 看逐条判定与可展开的证据链 →
+勾选知情同意后 **真实验证**（与 CLI 同一套流水线：临时 venv → 真安装 → import 冒烟 → 设备检查 →
+最小模型），过程中有实时日志，完成后 `report.json` / `report.html` 与 CLI 共用同一份 run 目录。
+
+安全边界（比 CLI 更严格）：
+
+- 默认只监听 `127.0.0.1`；每次启动生成一次性令牌，所有请求都要带；
+- `Host` 头必须是回环地址（防 DNS rebinding），写操作必须同源；
+- 「真实验证」必须显式勾选知情同意才会触发，与 CLI 的确认门一个标准；
+- `--allow-remote` 才允许非回环访问（会明确告警，请自行承担风险）。
 
 ## 输出示例
 
@@ -135,6 +154,7 @@ src/envdoctor/
 ├── verify/    验证计划、一次性 venv、安装、冒烟脚本、清理
 ├── report/    控制台渲染、JSON / 自包含 HTML 报告
 ├── explain/   可选 LLM 解释层（脱敏）
+├── web/       Web 控制台（标准库 HTTP 服务 + 单页界面，零新增依赖）
 └── cli/       typer 命令接线、退出码映射、中断处理
 ```
 

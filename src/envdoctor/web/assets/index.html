@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="envdoctor-token" content="__ENVDOCTOR_TOKEN__">
+<title>envdoctor · Web 控制台</title>
+<style>
+  :root {
+    --bg: #0f1115; --card: #171a21; --border: #2a2f3a; --text: #e6e8ee;
+    --dim: #9aa3b2; --ok: #3fb950; --warn: #d29922; --blocked: #f85149;
+    --unknown: #a371f7; --accent: #58a6ff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.6 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif; }
+  header { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+           padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--card); }
+  header h1 { font-size: 17px; margin: 0; letter-spacing: .3px; }
+  header .meta { color: var(--dim); font-size: 13px; }
+  header .spacer { flex: 1; }
+  main { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 18px;
+         max-width: 1500px; margin: 0 auto; padding: 18px 20px 60px; }
+  @media (max-width: 880px) { main { grid-template-columns: 1fr; } }
+  section { background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 14px 16px; margin-bottom: 16px; }
+  section h2 { font-size: 14px; margin: 0 0 10px; color: var(--dim); font-weight: 600;
+               text-transform: uppercase; letter-spacing: .6px; }
+  input[type=text] { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+                     background: #10131a; color: var(--text); font: inherit; }
+  input[type=text]:focus { outline: none; border-color: var(--accent); }
+  button { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
+           background: #21262e; color: var(--text); font: inherit; cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.primary { background: #1f6feb; border-color: #1f6feb; }
+  button.danger { border-color: var(--blocked); color: var(--blocked); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .row + .row { margin-top: 8px; }
+  .hint { color: var(--dim); font-size: 12px; }
+  .kv { display: grid; grid-template-columns: 96px 1fr; gap: 3px 10px; font-size: 13px; }
+  .kv div:nth-child(odd) { color: var(--dim); }
+  .banner { padding: 14px 16px; border-radius: 10px; background: #10131a;
+            border-left: 5px solid var(--dim); margin-bottom: 14px; }
+  .banner .overall { font-size: 19px; font-weight: 700; }
+  .banner .reason { color: var(--dim); margin-top: 3px; }
+  .state-ok { color: var(--ok); } .banner.state-ok { border-left-color: var(--ok); }
+  .state-warn { color: var(--warn); } .banner.state-warn { border-left-color: var(--warn); }
+  .state-blocked { color: var(--blocked); } .banner.state-blocked { border-left-color: var(--blocked); }
+  .state-unknown { color: var(--unknown); } .banner.state-unknown { border-left-color: var(--unknown); }
+  .state-na { color: var(--dim); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--dim); font-weight: 600; font-size: 12px; }
+  tr:last-child td { border-bottom: none; }
+  .pill { display: inline-block; min-width: 74px; font-size: 11px; font-weight: 700;
+          text-transform: uppercase; letter-spacing: .4px; }
+  .title { font-weight: 600; }
+  .summary { color: var(--dim); font-size: 13px; }
+  .fix { color: var(--warn); font-size: 13px; margin-top: 4px; }
+  details { margin-top: 5px; }
+  summary { cursor: pointer; color: var(--dim); font-size: 12px; }
+  .ev { color: var(--dim); font-size: 12px; margin: 3px 0 0 14px; }
+  .runs { list-style: none; margin: 0; padding: 0; }
+  .runs li { padding: 7px 8px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; }
+  .runs li:hover { background: #10131a; border-color: var(--border); }
+  .runs li.active { border-color: var(--accent); background: #10131a; }
+  .runs .t { font-size: 13px; }
+  .runs .s { color: var(--dim); font-size: 12px; }
+  pre.log { max-height: 300px; overflow: auto; background: #10131a; border: 1px solid var(--border);
+            border-radius: 8px; padding: 10px; font: 12px/1.5 Consolas, monospace; white-space: pre-wrap; }
+  .busy { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+          margin-right: 6px; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+  label.consent { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: var(--dim); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>envdoctor · Web 控制台</h1>
+  <span class="meta" id="machine-line">正在读取机器画像…</span>
+  <span class="spacer"></span>
+  <span class="meta" id="conn">连接中…</span>
+</header>
+
+<main>
+  <div>
+    <section>
+      <h2>目标</h2>
+      <div class="row">
+        <input type="text" id="target" placeholder="本地路径或 git URL，例如 . 或 https://github.com/owner/repo">
+      </div>
+      <div class="row">
+        <button class="primary" id="btn-scan">扫描并判定</button>
+        <button id="btn-refresh-clone" title="忽略克隆缓存重新 clone">强制刷新</button>
+        <button id="btn-cwd" title="填入服务进程的工作目录">当前目录</button>
+      </div>
+      <div class="row hint" id="scan-hint">只做静态分析：读依赖文件、探查本机、按规则库判定，不安装任何东西。</div>
+    </section>
+
+    <section>
+      <h2>真实验证</h2>
+      <label class="consent">
+        <input type="checkbox" id="consent">
+        <span>我理解：验证会在<b>系统临时目录</b>创建一次性环境，<b>真实安装</b>第三方依赖并执行其构建脚本
+        （会联网、耗流量、执行对方代码），验证后环境被删除，本机真实环境不受影响。</span>
+      </label>
+      <div class="row">
+        <button id="btn-verify" disabled>开始真实验证</button>
+        <a id="link-report" href="#" target="_blank" rel="noopener" style="display:none">打开完整报告 ↗</a>
+      </div>
+      <div class="row hint" id="verify-hint">先扫描一个目标，再对它做实测验证。</div>
+    </section>
+
+    <section>
+      <h2>机器画像</h2>
+      <div class="kv" id="machine"></div>
+    </section>
+
+    <section>
+      <h2>历史运行</h2>
+      <ul class="runs" id="runs"></ul>
+      <div class="row"><button id="btn-reload-runs" class="danger">刷新列表</button></div>
+    </section>
+  </div>
+
+  <div>
+    <div id="banner-host"></div>
+
+    <section>
+      <h2>判定明细</h2>
+      <table>
+        <thead><tr><th style="width:96px">状态</th><th style="width:96px">方面</th><th>结论</th></tr></thead>
+        <tbody id="verdicts"><tr><td colspan="3" class="hint">还没有结果，先在左侧选一个目标。</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="checkpoints-section" style="display:none">
+      <h2>真实验证检查点</h2>
+      <table>
+        <thead><tr><th style="width:96px">状态</th><th>步骤</th><th style="width:80px">耗时</th><th style="width:38%">说明</th></tr></thead>
+        <tbody id="checkpoints"></tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>运行日志 <span class="hint" id="job-phase"></span></h2>
+      <pre class="log" id="log">等待任务…</pre>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const TOKEN = document.querySelector('meta[name="envdoctor-token"]').content;
+  const $ = (id) => document.getElementById(id);
+  let currentRun = null;
+  let pollTimer = null;
+
+  async function api(path, options) {
+    const opts = Object.assign({ headers: {} }, options || {});
+    opts.headers = Object.assign({ "X-Envdoctor-Token": TOKEN }, opts.headers || {});
+    if (opts.body && typeof opts.body !== "string") {
+      opts.headers["Content-Type"] = "application/json";
+      opts.body = JSON.stringify(opts.body);
+    }
+    const response = await fetch(path, opts);
+    const text = await response.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch (err) { data = { error: "BAD_JSON", raw: text }; }
+    if (!response.ok) {
+      const message = (data && (data.message || data.error)) || ("HTTP " + response.status);
+      throw new Error(message);
+    }
+    return data;
+  }
+
+  function log(line) {
+    const box = $("log");
+    if (box.textContent === "等待任务…") box.textContent = "";
+    box.textContent += (box.textContent ? "\n" : "") + line;
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function stateClass(state) {
+    if (state === "ok" || state === "pass") return "state-ok";
+    if (state === "warn" || state === "skip") return "state-warn";
+    if (state === "blocked" || state === "fail" || state === "error") return "state-blocked";
+    if (state === "unknown") return "state-unknown";
+    return "state-na";
+  }
+
+  async function loadMachine() {
+    try {
+      const profile = await api("/api/machine");
+      const gpu = profile.gpu;
+      const gpuText = gpu.present
+        ? gpu.devices.map(function (d) { return d.name; }).join(", ") + "（驱动 " + (gpu.driver_version || "未知") + "，CUDA ≤ " + (gpu.driver_max_cuda || "未知") + "）"
+        : "未检测到（" + (gpu.reason || "原因未知") + "）";
+      $("machine-line").textContent =
+        profile.os.name + " " + profile.os.release + " · Python " + profile.python.version +
+        " · uv " + (profile.tooling.uv || "—") + " · GPU " + (gpu.present ? "已检测到" : "未检测到");
+      $("conn").textContent = "已连接 · " + profile.interpreters.length + " 个解释器";
+      $("machine").innerHTML = [
+        ["系统", profile.os.name + " " + profile.os.release + " " + profile.os.arch],
+        ["Python", profile.python.version],
+        ["解释器", profile.interpreters.map(function (i) { return i.version + " (" + i.source + ")"; }).join("、") || "—"],
+        ["工具链", "uv " + (profile.tooling.uv || "—") + " · pip " + (profile.tooling.pip || "—") +
+                   " · git " + (profile.tooling.git || "—") + " · conda " + (profile.tooling.conda || "—")],
+        ["GPU", gpuText],
+        ["内存", profile.memory_bytes ? (profile.memory_bytes / 1073741824).toFixed(1) + " GiB" : "—"],
+        ["临时盘", profile.temp_disk_free_bytes ? (profile.temp_disk_free_bytes / 1073741824).toFixed(1) + " GiB 可用" : "—"]
+      ].map(function (pair) { return "<div>" + pair[0] + "</div><div>" + escapeHtml(pair[1]) + "</div>"; }).join("");
+      if (!$("target").value && profile.cwd) { $("target").value = profile.cwd; }
+    } catch (err) {
+      $("conn").textContent = "连接失败：" + err.message;
+    }
+  }
+
+  function escapeHtml(value) {
+    return String(value === null || value === undefined ? "" : value)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  async function loadRuns() {
+    try {
+      const runs = await api("/api/runs");
+      const host = $("runs");
+      if (!runs.length) { host.innerHTML = '<li class="hint">还没有历史运行</li>'; return; }
+      host.innerHTML = runs.map(function (run) {
+        const label = run.target || run.run_id;
+        const state = run.overall ? run.overall : "—";
+        return '<li data-run="' + escapeHtml(run.run_id) + '"' +
+          (currentRun === run.run_id ? ' class="active"' : "") + ">" +
+          '<div class="t"><span class="pill ' + stateClass(state) + '">' + escapeHtml(state) + "</span> " + escapeHtml(label) + "</div>" +
+          '<div class="s">' + escapeHtml(run.run_id) + " · " + escapeHtml(run.generated_at || "") + "</div></li>";
+      }).join("");
+      Array.prototype.forEach.call(host.querySelectorAll("li[data-run]"), function (item) {
+        item.addEventListener("click", function () { openRun(item.getAttribute("data-run")); });
+      });
+    } catch (err) {
+      log("读取历史运行失败：" + err.message);
+    }
+  }
+
+  async function openRun(runId) {
+    try {
+      const report = await api("/api/runs/" + encodeURIComponent(runId));
+      currentRun = runId;
+      renderReport(report);
+      $("btn-verify").disabled = false;
+      $("verify-hint").textContent = "将对 " + (report.target && report.target.original || runId) + " 执行实测验证。";
+      const link = $("link-report");
+      link.href = "/api/runs/" + encodeURIComponent(runId) + "/report.html?token=" + encodeURIComponent(TOKEN);
+      link.style.display = "";
+      loadRuns();
+    } catch (err) {
+      log("打开运行失败：" + err.message);
+    }
+  }
+
+  function renderReport(report) {
+    const host = $("banner-host");
+    const overall = report.overall || "unknown";
+    host.innerHTML = '<div class="banner ' + stateClass(overall) + '">' +
+      '<div class="overall ' + stateClass(overall) + '">' + escapeHtml(overall.toUpperCase()) + "</div>" +
+      '<div class="reason">' + escapeHtml(report.overall_reason || "") + "</div></div>";
+
+    const rows = (report.verdicts || []).map(function (verdict) {
+      const evidence = (verdict.evidence || []).map(function (item) {
+        return '<div class="ev">· ' + escapeHtml(item.detail) +
+          (item.source ? " <i>— " + escapeHtml(item.source) + "</i>" : "") + "</div>";
+      }).join("");
+      const fix = verdict.fix ? '<div class="fix">修复：' + escapeHtml(verdict.fix.text) +
+        (verdict.fix.command ? " <code>" + escapeHtml(verdict.fix.command) + "</code>" : "") + "</div>" : "";
+      const details = evidence ? "<details><summary>证据（" + verdict.evidence.length + "）</summary>" + evidence + "</details>" : "";
+      return "<tr><td><span class='pill " + stateClass(verdict.state) + "'>" + escapeHtml(verdict.state) + "</span></td>" +
+        "<td class='summary'>" + escapeHtml(verdict.aspect) + "</td>" +
+        "<td><div class='title'>" + escapeHtml(verdict.title) + "</div>" +
+        "<div class='summary'>" + escapeHtml(verdict.summary) + "</div>" + fix + details + "</td></tr>";
+    }).join("");
+    $("verdicts").innerHTML = rows || '<tr><td colspan="3" class="hint">没有判定</td></tr>';
+
+    const checkpoints = report.checkpoints || [];
+    if (checkpoints.length) {
+      $("checkpoints-section").style.display = "";
+      $("checkpoints").innerHTML = checkpoints.map(function (cp) {
+        const note = cp.skip_reason || cp.detail || "—";
+        return "<tr><td><span class='pill " + stateClass(cp.state) + "'>" + escapeHtml(cp.state) + "</span></td>" +
+          "<td>" + escapeHtml(cp.title) + "</td>" +
+          "<td class='summary'>" + (cp.seconds ? cp.seconds.toFixed(1) + "s" : "—") + "</td>" +
+          "<td class='summary'>" + escapeHtml(note) + "</td></tr>";
+      }).join("");
+    } else {
+      $("checkpoints-section").style.display = "none";
+    }
+  }
+
+  function startJob(payload, label) {
+    $("log").textContent = "";
+    log("▶ " + label);
+    api("/api/jobs", { method: "POST", body: payload })
+      .then(function (job) { pollJob(job.id); })
+      .catch(function (err) { log("✗ 启动失败：" + err.message); });
+  }
+
+  function pollJob(jobId) {
+    if (pollTimer) clearTimeout(pollTimer);
+    let seenLogs = 0;
+    let lastLive = "";
+    const tick = function () {
+      api("/api/jobs/" + jobId).then(function (job) {
+        $("job-phase").innerHTML = job.state === "running" ? '<span class="busy"></span>' + escapeHtml(job.phase) : escapeHtml(job.phase);
+        const all = job.logs || [];
+        if (all.length < seenLogs) { seenLogs = 0; $("log").textContent = ""; }
+        all.slice(seenLogs).forEach(log);
+        seenLogs = all.length;
+        const live = (job.live_logs || []).join("\n");
+        if (live && live !== lastLive) {
+          lastLive = live;
+          log("── 实时日志 ──");
+          job.live_logs.forEach(function (line) { log(line); });
+        }
+        if (job.state === "done") {
+          log("✓ 完成：" + JSON.stringify(job.result));
+          if (job.result && job.result.run_id) { openRun(job.result.run_id); }
+          loadRuns();
+          return;
+        }
+        if (job.state === "failed") {
+          log("✗ 失败：" + job.error);
+          return;
+        }
+        pollTimer = setTimeout(tick, 700);
+      }).catch(function (err) {
+        log("轮询失败：" + err.message);
+      });
+    };
+    tick();
+  }
+
+  $("btn-scan").addEventListener("click", function () {
+    const target = $("target").value.trim();
+    if (!target) { log("请填写目标路径或 git URL"); return; }
+    startJob({ kind: "analyze", target: target, refresh: $("btn-refresh-clone").dataset.on === "1" }, "扫描 " + target);
+  });
+  $("btn-refresh-clone").addEventListener("click", function () {
+    this.dataset.on = this.dataset.on === "1" ? "0" : "1";
+    this.classList.toggle("primary", this.dataset.on === "1");
+  });
+  $("btn-cwd").addEventListener("click", function () {
+    api("/api/machine").then(function (profile) { $("target").value = profile.cwd || "."; });
+  });
+  $("btn-verify").addEventListener("click", function () {
+    if (!$("consent").checked) { log("请先勾选知情同意（真实验证会安装并执行第三方代码）"); return; }
+    if (!currentRun) { log("先扫描一个目标"); return; }
+    startJob({ kind: "verify", run_id: currentRun, consent: true }, "真实验证 " + currentRun);
+  });
+  $("btn-reload-runs").addEventListener("click", loadRuns);
+
+  loadMachine();
+  loadRuns();
+})();
+</script>
+</body>
+</html>

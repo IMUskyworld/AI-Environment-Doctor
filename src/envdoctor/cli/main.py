@@ -374,6 +374,40 @@ def doctor(
         raise _fail(exc) from None
 
 
+@app.command()
+def web(
+    host: str = typer.Option("127.0.0.1", "--host", help="监听地址（默认仅本机；0.0.0.0 需配合 --allow-remote）"),
+    port: int = typer.Option(8765, "--port", help="监听端口（0 表示随机端口）"),
+    workdir: Path | None = typer.Option(None, "--workdir", help="运行目录根（默认 ./.envdoctor，与 CLI 共用历史）"),
+    config_path: str | None = typer.Option(
+        None, "--config", help="配置文件路径（默认 ./envdoctor.toml，其次用户级配置）"
+    ),
+    open_browser: bool = typer.Option(True, "--open/--no-open", help="启动后自动打开浏览器"),
+    allow_remote: bool = typer.Option(False, "--allow-remote", help="允许非回环地址访问（危险：需自行承担风险）"),
+) -> None:
+    """Web 控制台：浏览器里选目标、看判定、跑实测验证。"""
+    if allow_remote and host in {"127.0.0.1", "localhost"}:
+        raise typer.BadParameter("--allow-remote 需要配合非回环 --host 使用")
+    try:
+        from envdoctor.web.server import run_console
+
+        code = run_console(
+            host=host,
+            port=port,
+            workdir=str(workdir) if workdir else None,
+            config=load_config(config_path),
+            open_browser=open_browser,
+            allow_remote=allow_remote,
+        )
+    except typer.Exit:
+        raise
+    except EnvDoctorError as exc:
+        raise _fail(exc) from None
+    except Exception as exc:
+        raise _fail(exc) from None
+    raise typer.Exit(code)
+
+
 def main() -> None:
     _reconfigure_console()
     try:

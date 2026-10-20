@@ -82,6 +82,24 @@ jobs:
       - name: Module entry point works
         run: /tmp/envdoctor-wheel/bin/python -m envdoctor version
 
+      - name: Web console serves its page and enforces the token
+        run: |
+          /tmp/envdoctor-wheel/bin/envdoctor web --port 8799 --no-open --workdir /tmp/envdoctor-web > /tmp/web.log 2>&1 &
+          for i in $(seq 1 30); do
+            if grep -q "token=" /tmp/web.log; then break; fi
+            sleep 0.5
+          done
+          token=$(grep -o "token=[A-Za-z0-9_-]*" /tmp/web.log | head -n 1 | cut -d= -f2)
+          test -n "$token"
+          # 无令牌 → 403；有令牌 → 200 且页面内嵌令牌
+          status=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8799/)
+          test "$status" = "403"
+          curl -s "http://127.0.0.1:8799/?token=$token" | grep -q "envdoctor-token"
+          # 非回环 Host 头 → 403（DNS rebinding 防护）
+          status=$(curl -s -o /dev/null -w "%{http_code}" -H "Host: evil.example.com" \
+            -H "X-Envdoctor-Token: $token" http://127.0.0.1:8799/api/machine)
+          test "$status" = "403"
+
       - name: Self-contained HTML report
         run: |
           /tmp/envdoctor-wheel/bin/envdoctor doctor . --no-verify --workdir /tmp/envdoctor-work >/dev/null

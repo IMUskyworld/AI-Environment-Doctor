@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "envdoctor"
-version = "0.1.0"
+version = "0.2.0"
 description = "Answer 'can this AI project run on my machine?' with evidence: scan, probe, analyze, and verify in a throwaway environment"
 readme = "README.md"
 requires-python = ">=3.11"
