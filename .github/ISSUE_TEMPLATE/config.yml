@@ -1,8 +1,4 @@
+# 只允许用模板提问，避免没有上下文的空白 issue。
+# （安全漏洞请按 SECURITY.md 的说明走 GitHub 的「Report a vulnerability」通道，
+#   不要用公开 issue；该入口在仓库的 Security 标签页里，无需在此写死仓库地址。）
 blank_issues_enabled: false
-contact_links:
-  - name: 安全问题报告
-    url: https://github.com/<owner>/envdoctor/security/advisories/new
-    about: 请不要用公开 issue 报告安全问题；见 SECURITY.md
-  - name: 问答讨论
-    url: https://github.com/<owner>/envdoctor/discussions
-    about: 使用方法、诊断思路与经验分享

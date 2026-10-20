@@ -21,19 +21,19 @@ envdoctor doctor https://github.com/xxx/yyy
 ## 快速开始
 
 ```powershell
-# 推荐：uv tool 安装（装到 ASCII 路径，避免 Windows 路径编码坑）
-uv tool install envdoctor
-envdoctor doctor https://github.com/xxx/yyy
-
-# 或 pipx / pip
-pipx install envdoctor
-
-# 从源码运行（开发用；CJK 路径下 editable install 会坏，见 DEVELOPMENT.md §24）
+# 从源码运行（开发与试用；CJK 路径下 editable install 会坏，见 DEVELOPMENT.md §24）
 git clone <this repo>; cd "AI Environment Doctor"
 uv venv --python 3.11
 uv pip install typer pydantic rich packaging psutil jinja2 httpx pyyaml nvidia-ml-py   # 国内网络：加 UV_DEFAULT_INDEX=<镜像>
 .venv\Scripts\activate
 python scripts/envdoctor_dev.py doctor /path/to/project
+```
+
+装到 **ASCII 路径**后即可直接用 `envdoctor` 命令：
+
+```powershell
+uv tool install .        # 或 pipx install . / pip install .
+envdoctor doctor https://github.com/xxx/yyy
 ```
 
 > 真实验证阶段需要 [`uv`](https://docs.astral.sh/uv/)（创建一次性环境）。
